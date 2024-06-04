@@ -14,5 +14,5 @@ clean:
 	go clean
 
 run: build
-	./go_is_call_by
+	./go_is_call_by_value
 	

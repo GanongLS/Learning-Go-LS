@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"log"
@@ -10,6 +12,47 @@ import (
 func main() {
 	simpleCat()
 	deferExample()
+	// DoSomeInserts() // harus ada inputnya, biarin jadi fungsi umum (public function) biar ga error.
+
+	_, closer, err := getFile(os.Args[1])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer closer()
+}
+
+func getFile(name string) (*os.File, func(), error) {
+	file, err := os.Open(name)
+	if err != nil {
+		return nil, nil, err
+	}
+	return file, func() {
+		file.Close()
+	}, nil
+}
+
+// defer good for error handling
+
+func DoSomeInserts(ctx context.Context, db *sql.DB, value1, value2 string) (err error) {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == nil {
+			err = tx.Commit()
+		}
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+	_, err = tx.ExecContext(ctx, "INSERT INTO FOO (val) values $1", value1)
+	if err != nil {
+		return err
+	}
+	// use tx to do more database inserts here
+	return nil
 }
 
 func deferExample() int { // last in defer first out, last apear the defer the first to be executed. defer bakal cuman mau ngerun function dan nutupnya kalau semua dependencies di engin bersih.
