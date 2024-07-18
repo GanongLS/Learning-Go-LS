@@ -14,4 +14,5 @@ clean:
 	go clean
 
 run: build
-	./interface
+	./interface_in_go
+	
